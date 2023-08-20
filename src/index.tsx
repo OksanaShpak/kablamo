@@ -6,84 +6,95 @@ import { createRoot } from 'react-dom/client';
 const formattedSeconds = (sec: number) => Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
 
 // An interface is declared to define the properties the "Stopwatch" class component should expect
-interface StopwatchProps extends ClassAttributes<Stopwatch> {
+interface StopwatchProps {
   initialSeconds: number;
 }
 
-class Stopwatch extends Component<StopwatchProps, any> {
-  incrementer: any
-  laps: any[]
+interface StopwatchState {
+  incrementer: number | null;
+  secondsElapsed: number;
+  laps: number[];
+}
+
+class Stopwatch extends Component<StopwatchProps, StopwatchState> {
+
   constructor(props: StopwatchProps) {
     super(props);
     this.state = {
+      incrementer: null,
       secondsElapsed: props.initialSeconds,
-      lastClearedIncrementer: null,
+      laps: [],
     }
-    this.laps = [];
   }
 
   //Starts a timer that increments the secondsElapsed state every second
   handleStartClick = () => {
-    this.incrementer = setInterval(() =>
-      this.setState({
-        secondsElapsed: this.state.secondsElapsed + 1,
-      }), 1000);
+    this.setState({
+      incrementer: window.setInterval(() =>
+        this.setState({
+          secondsElapsed: this.state.secondsElapsed + 1,
+        }), 1000),
+    });
   }
 
   // Stops the timer and stores the last cleared incrementer
   handleStopClick = () => {
-    clearInterval(this.incrementer);
+    if (!this.state.incrementer) return;
+    clearInterval(this.state.incrementer);
     this.setState({
-      lastClearedIncrementer: this.incrementer,
+      incrementer: null,
     });
   }
 
   // Resets the timer and clears the laps
   handleResetClick = () => {
-    clearInterval(this.incrementer);
-    this.laps = [];
     this.setState({
       secondsElapsed: 0,
+      laps: [],
     });
   }
 
   // Stores the current elapsed time as a lap
-  handleLabClick = () => {
-    this.laps = this.laps.concat([this.state.secondsElapsed]);
-    this.forceUpdate();
+  handleLapClick = () => {
+    this.setState({
+      laps: this.state.laps.concat([this.state.secondsElapsed]),
+    });
   }
 
   // Deletes a lap based on its index
-  handleDeleteClick(index: number) {
-    return () => this.laps.splice(index, 1);
+  handleDeleteClick = (index: number): void => {
+    this.setState({
+      laps: this.state.laps.filter((lap: any, i: number) => i !== index),
+    })
   }
 
   // The TSX to render the stopwatch with the start/stop/reset/lap buttons and laps.
   render() {
     const {
       secondsElapsed,
-      lastClearedIncrementer,
+      laps,
+      incrementer,
     } = this.state;
     return (
       <div className="stopwatch">
         <h1 className="stopwatch-timer">{formattedSeconds(secondsElapsed)}</h1>
-        {(secondsElapsed === 0 || this.incrementer === lastClearedIncrementer
+        {(!incrementer
           ? <button type="button" className="start-btn"
             onClick={this.handleStartClick}>start</button>
           : <button type="button" className="stop-btn"
             onClick={this.handleStopClick}>stop</button>
         )}
-        {(secondsElapsed !== 0 && this.incrementer !== lastClearedIncrementer
-          ? <button type="button" onClick={this.handleLabClick}>lap</button>
+        {(incrementer
+          ? <button type="button" onClick={this.handleLapClick}>lap</button>
           : null
         )}
-        {(secondsElapsed !== 0 && this.incrementer === lastClearedIncrementer
+        {(secondsElapsed !== 0 && !incrementer
           ? <button type="button" onClick={this.handleResetClick}>reset</button>
           : null
         )}
         <div className="stopwatch-laps">
-          {this.laps && this.laps.map((lap, i) =>
-            <Lap key={i} index={i + 1} lap={lap} onDelete={this.handleDeleteClick(i)} />)}
+          {laps.map((lap, i) =>
+            <Lap key={i} index={i + 1} lap={lap} onDelete={() => this.handleDeleteClick(i)} />)}
         </div>
       </div>
     );
@@ -91,7 +102,7 @@ class Stopwatch extends Component<StopwatchProps, any> {
 }
 
 // A functional component to render each lap
-const Lap = (props: { index: number, lap: number, onDelete: () => {} }) => (
+const Lap = (props: { index: number, lap: number, onDelete: () => void }) => (
   <div key={props.index} className="stopwatch-lap">
     <strong>{props.index}</strong>/ {formattedSeconds(props.lap)} <button
       onClick={props.onDelete} > X </button>
