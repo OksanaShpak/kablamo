@@ -2,10 +2,8 @@ import * as React from "react";
 import { Component, ClassAttributes } from "react";
 import { createRoot } from 'react-dom/client';
 
-// is defined to format seconds into a minute:seconds format
 const formattedSeconds = (sec: number) => Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2);
 
-// An interface is declared to define the properties the "Stopwatch" class component should expect
 interface StopwatchProps extends ClassAttributes<Stopwatch> {
   initialSeconds: number;
 }
@@ -22,7 +20,6 @@ class Stopwatch extends Component<StopwatchProps, any> {
     this.laps = [];
   }
 
-  //Starts a timer that increments the secondsElapsed state every second
   handleStartClick = () => {
     this.incrementer = setInterval(() =>
       this.setState({
@@ -30,7 +27,6 @@ class Stopwatch extends Component<StopwatchProps, any> {
       }), 1000);
   }
 
-  // Stops the timer and stores the last cleared incrementer
   handleStopClick = () => {
     clearInterval(this.incrementer);
     this.setState({
@@ -38,7 +34,6 @@ class Stopwatch extends Component<StopwatchProps, any> {
     });
   }
 
-  // Resets the timer and clears the laps
   handleResetClick = () => {
     clearInterval(this.incrementer);
     this.laps = [];
@@ -47,18 +42,15 @@ class Stopwatch extends Component<StopwatchProps, any> {
     });
   }
 
-  // Stores the current elapsed time as a lap
   handleLabClick = () => {
     this.laps = this.laps.concat([this.state.secondsElapsed]);
     this.forceUpdate();
   }
 
-  // Deletes a lap based on its index
   handleDeleteClick(index: number) {
     return () => this.laps.splice(index, 1);
   }
 
-  // The TSX to render the stopwatch with the start/stop/reset/lap buttons and laps.
   render() {
     const {
       secondsElapsed,
@@ -90,7 +82,6 @@ class Stopwatch extends Component<StopwatchProps, any> {
   }
 }
 
-// A functional component to render each lap
 const Lap = (props: { index: number, lap: number, onDelete: () => {} }) => (
   <div key={props.index} className="stopwatch-lap">
     <strong>{props.index}</strong>/ {formattedSeconds(props.lap)} <button
@@ -98,7 +89,6 @@ const Lap = (props: { index: number, lap: number, onDelete: () => {} }) => (
   </div>
 );
 
-//the ReactDOM.render method is used to render the Stopwatch component into an HTML element with the id "content"
 const container = document.getElementById('content') as HTMLElement;
 const root = createRoot(container);
 root.render(
